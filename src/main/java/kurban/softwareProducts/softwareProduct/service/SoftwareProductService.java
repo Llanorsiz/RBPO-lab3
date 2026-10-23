@@ -1,5 +1,8 @@
 package kurban.softwareProducts.softwareProduct.service;
 
+import kurban.softwareProducts.common.error.ConflictException;
+import kurban.softwareProducts.common.error.NotFoundException;
+import kurban.softwareProducts.developmentTask.model.DevelopmentTaskProgress;
 import kurban.softwareProducts.developmentTask.repository.DevelopmentTaskRepository;
 import kurban.softwareProducts.release.model.Release;
 import kurban.softwareProducts.release.repository.ReleaseRepository;
@@ -31,6 +34,19 @@ public class SoftwareProductService {
                 .stream()
                 .map(softwareProductMapper::toSoftwareProductResponse)
                 .toList();
+    }
+
+    @Transactional
+    public SoftwareProductResponse changeResponsibleUser(Long productId, Long newResponsibleUserId){
+        SoftwareProduct softwareProduct = softwareProductRepository.findById(productId)
+                .orElseThrow(() -> new NotFoundException("Программный продукт не найден"));
+
+        boolean busy = developmentTaskRepository.existsByAssigneeUserIdAndProgress(newResponsibleUserId, DevelopmentTaskProgress.IN_PROGRESS);
+        if(busy){
+            throw new ConflictException("Пользователь имееет задачу в работе");
+        }
+        softwareProduct.setResponsibleUserId(newResponsibleUserId);
+        return softwareProductMapper.toSoftwareProductResponse(softwareProduct);
     }
 
     @Transactional

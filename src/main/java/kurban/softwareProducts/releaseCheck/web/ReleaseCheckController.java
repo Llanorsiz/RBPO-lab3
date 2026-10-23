@@ -22,9 +22,9 @@ public class ReleaseCheckController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping
-    public ReleaseCheckResponse createReleaseCheck(@RequestBody CreateReleaseCheckRequest request) {
-        return releaseCheckService.createReleaseCheck(request);
+    @PostMapping("/releases/{releaseId}")
+    public ReleaseCheckResponse createReleaseCheck(@PathVariable Long releaseId, @RequestBody CreateReleaseCheckRequest request) {
+        return releaseCheckService.createReleaseCheck(releaseId, request);
     }
 
     @PutMapping("/{releaseCheckId}")

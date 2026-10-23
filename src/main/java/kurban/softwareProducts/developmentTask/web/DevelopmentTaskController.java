@@ -21,6 +21,16 @@ public class DevelopmentTaskController {
         return developmentTaskService.getDevelopmentTasks();
     }
 
+    @PatchMapping("/{taskId}/complete")
+    public DevelopmentTaskResponse completeTask(@PathVariable Long taskId){
+        return developmentTaskService.completeTask(taskId);
+    }
+
+    @PatchMapping("/{taskId}/assign/{userId}")
+    public DevelopmentTaskResponse assignTask(@PathVariable Long taskId, @PathVariable Long userId){
+        return developmentTaskService.assignTask(taskId, userId);
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public DevelopmentTaskResponse createDevelopmentTask(@RequestBody CreateDevelopmentTaskRequest request) {

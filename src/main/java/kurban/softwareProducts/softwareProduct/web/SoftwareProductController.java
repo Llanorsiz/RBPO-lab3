@@ -21,6 +21,11 @@ public class SoftwareProductController {
         return softwareProductService.getSoftwareProducts();
     }
 
+    @PatchMapping("/{productId}/responsible/{newResponsibleUserId}")
+    public SoftwareProductResponse changeResponsibleUser(@PathVariable Long productId, @PathVariable Long newResponsibleUserId){
+        return softwareProductService.changeResponsibleUser(productId, newResponsibleUserId);
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public SoftwareProductResponse createSoftwareProduct(@RequestBody CreateSoftwareProductRequest request) {

@@ -9,7 +9,6 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class CreateReleaseCheckRequest {
-    private Long releaseId;
     private String name;
     private ReleaseCheckType type;
     private String result;

@@ -1,5 +1,7 @@
 package kurban.softwareProducts.release.service;
 
+import kurban.softwareProducts.common.error.ConflictException;
+import kurban.softwareProducts.common.error.NotFoundException;
 import kurban.softwareProducts.developmentTask.repository.DevelopmentTaskRepository;
 import kurban.softwareProducts.release.mapper.ReleaseMapper;
 import kurban.softwareProducts.release.model.Release;
@@ -8,12 +10,11 @@ import kurban.softwareProducts.release.web.request.CreateReleaseRequest;
 import kurban.softwareProducts.release.web.request.UpdateReleaseRequest;
 import kurban.softwareProducts.release.web.response.ReleaseResponse;
 import kurban.softwareProducts.releaseCheck.repository.ReleaseCheckRepository;
+import kurban.softwareProducts.softwareProduct.model.SoftwareProduct;
 import kurban.softwareProducts.softwareProduct.repository.SoftwareProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -52,19 +53,24 @@ public class ReleaseService {
 
     @Transactional
     public void deleteRelease(Long releaseId) {
-        Release release = releaseRepository.findById(releaseId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Release " + releaseId + " not found"));
+        Release release = releaseRepository.findById(releaseId)
+                .orElseThrow(() -> new NotFoundException("Релиз не найден"));
+
         if (developmentTaskRepository.existsByReleaseId(releaseId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Release " + releaseId + " is referenced by development tasks");
+            throw new ConflictException("Нельзя удалить релиз, к которому привязаны задачи");
         }
-        releaseCheckRepository.deleteAll(releaseCheckRepository.findByReleaseId(releaseId));
-        softwareProductRepository.findById(release.getProductId())
-                .filter(product -> releaseId.equals(product.getCurrentReleaseId()))
-                .ifPresent(product -> {
-                    product.setCurrentReleaseId(null);
-                    softwareProductRepository.save(product);
-                });
+
+        SoftwareProduct product = softwareProductRepository.findById(release.getProductId())
+                .orElseThrow(() -> new NotFoundException("Программный продукт не найден"));
+
+        if(releaseId.equals(product.getCurrentReleaseId())){
+            throw new ConflictException("Нельзя удалить релиз, который является текущим для продукта");
+        }
+
+        if(!releaseCheckRepository.findByReleaseId(releaseId).isEmpty()){
+            throw new ConflictException("Нельзя отменить релиз с существующими чек-листами");
+        }
+
         releaseRepository.delete(release);
     }
 }
